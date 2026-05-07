@@ -1,0 +1,85 @@
+name: CI/CD Backend — Build → ECR → EC2
+
+on:
+  push:
+    branches: [deploy]   # Disparador: solo rama deploy ✅
+
+env:
+  AWS_REGION: ${{ secrets.AWS_REGION }}
+  ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configurar credenciales AWS
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id:     ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token:     ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region:            ${{ env.AWS_REGION }}
+
+      - name: Login a Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build y Push ms-usuarios a ECR
+        run: |
+          IMAGE=$ECR_REGISTRY/notara-ms-usuarios:latest
+          docker build -t $IMAGE ./ms-usuarios
+          docker push $IMAGE
+
+      - name: Build y Push ms-canciones a ECR
+        run: |
+          IMAGE=$ECR_REGISTRY/notara-ms-canciones:latest
+          docker build -t $IMAGE ./ms-canciones
+          docker push $IMAGE
+
+      - name: Build y Push ms-notas-metas a ECR
+        run: |
+          IMAGE=$ECR_REGISTRY/notara-ms-notas-metas:latest
+          docker build -t $IMAGE ./ms-notas-metas
+          docker push $IMAGE
+      - name: Build y Push eureka-server a ECR
+        run: |
+          IMAGE=$ECR_REGISTRY/notara-eureka:latest
+          docker build -t $IMAGE ./eureka-server
+          docker push $IMAGE
+
+      - name: Build y Push api-gateway a ECR
+        run: |
+          IMAGE=$ECR_REGISTRY/notara-api-gateway:latest
+          docker build -t $IMAGE ./api-gateway
+          docker push $IMAGE
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id:     ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token:     ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region:            ${{ env.AWS_REGION }}
+
+      - name: Deploy en EC2-Backend via SSM
+        run: |
+          aws ssm send-command \
+            --instance-ids "${{ secrets.EC2_BACKEND_INSTANCE_ID }}" \
+            --document-name "AWS-RunShellScript" \
+            --parameters 'commands=[
+              "aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${{ secrets.ECR_REGISTRY }}",
+              "cd /home/ec2-user && git clone https://github.com/${{ github.repository }} repo 2>/dev/null || (cd repo && git pull)",
+              "cd /home/ec2-user/repo",
+              "echo DATA_EC2_IP=${{ secrets.DATA_EC2_PRIVATE_IP }} > .env",
+              "echo POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }} >> .env",
+              "echo JWT_SECRET=${{ secrets.JWT_SECRET }} >> .env",
+              "echo JWT_REFRESH_SECRET=${{ secrets.JWT_REFRESH_SECRET }} >> .env",
+              "docker compose pull && docker compose up -d"
+            ]'
