@@ -2,7 +2,7 @@ name: CI/CD Backend — Build → ECR → EC2
 
 on:
   push:
-    branches: [deploy]   # Disparador: solo rama deploy ✅
+    branches: [main]   
 
 env:
   AWS_REGION: ${{ secrets.AWS_REGION }}
