@@ -1,7 +1,7 @@
 version: '3.9'
 services:
   ms-usuarios:
-    build: ./ms-usuarios
+    image: 495450559805.dkr.ecr.us-east-1.amazonaws.com/notara-ms-usuarios:latest
     container_name: notara-ms-usuarios
     ports:
       - '8081:8081'
@@ -22,7 +22,7 @@ services:
     restart: unless-stopped
 
   ms-canciones:
-    build: ./ms-canciones
+    image: 495450559805.dkr.ecr.us-east-1.amazonaws.com/notara-ms-canciones:latest
     container_name: notara-ms-canciones
     ports:
       - '3002:3002'
@@ -37,7 +37,7 @@ services:
     restart: unless-stopped
 
   ms-notas-metas:
-    build: ./ms-notas-metas
+    image: 495450559805.dkr.ecr.us-east-1.amazonaws.com/notara-ms-notas-metas:latest
     container_name: notara-ms-notas-metas
     ports:
       - '8083:8083'
@@ -55,7 +55,7 @@ services:
     restart: unless-stopped
 
   api-gateway:
-    build: ./api-gateway
+    image: 495450559805.dkr.ecr.us-east-1.amazonaws.com/notara-api-gateway:latest
     container_name: notara-gateway
     ports:
       - '3000:3000'
@@ -71,7 +71,7 @@ services:
     restart: unless-stopped
 
   api-gateway001:
-    build: ./api-getaway-001
+    image: 495450559805.dkr.ecr.us-east-1.amazonaws.com/notara-api-gateway001:latest
     ports:
       - "8086:8086"
     environment:
@@ -87,7 +87,7 @@ services:
     restart: unless-stopped
 
   eureka-server:
-    build: ./eureka-server
+    image: 495450559805.dkr.ecr.us-east-1.amazonaws.com/notara-eureka:latest
     container_name: eureka-server
     ports:
       - "8761:8761"
