@@ -1,7 +1,7 @@
 name: Deploy Notara Backend
 on:
   push:
-    branches: [main]
+    branches: [deploy]
 
 jobs:
   build-and-deploy:
@@ -34,7 +34,7 @@ jobs:
             --region us-east-1 \
             --parameters commands='[
               "aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 495450559805.dkr.ecr.us-east-1.amazonaws.com",
-              "if [ ! -d /home/ec2-user/notara-backend ]; then git clone https://github.com/TU_USUARIO/notara-backend.git /home/ec2-user/notara-backend; else cd /home/ec2-user/notara-backend && git pull; fi",
+              "if [ ! -d /home/ec2-user/notara-backend ]; then git clone https://github.com/elpanxo/notara-backend.git /home/ec2-user/notara-backend; else cd /home/ec2-user/notara-backend && git pull; fi",
               "cd /home/ec2-user/notara-backend",
               "echo JWT_SECRET=${{ secrets.JWT_SECRET }} > .env",
               "echo JWT_REFRESH_SECRET=${{ secrets.JWT_REFRESH_SECRET }} >> .env",

@@ -7,7 +7,8 @@ FROM node:20-alpine
 WORKDIR /app
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 COPY --from=deps /app/node_modules ./node_modules
-COPY package.json ./src/ ./
+COPY package.json ./
+COPY src ./src
 USER appuser
 EXPOSE 3002
 HEALTHCHECK --interval=30s --timeout=10s CMD wget -qO- http://localhost:3002/health || exit 1

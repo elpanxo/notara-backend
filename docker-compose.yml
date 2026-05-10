@@ -23,6 +23,8 @@ services:
         condition: service_healthy
       eureka-server:
         condition: service_healthy
+    networks:
+      - notara-internal
     restart: unless-stopped
 
   ms-canciones:
@@ -41,6 +43,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    networks:
+      - notara-internal
     restart: unless-stopped
 
   ms-notas-metas:
@@ -61,6 +65,8 @@ services:
         condition: service_healthy
       eureka-server:
         condition: service_healthy
+    networks:
+      - notara-internal
     restart: unless-stopped
 
   api-gateway:
@@ -75,6 +81,8 @@ services:
     depends_on:
       - ms-usuarios
       - ms-canciones
+    networks:
+      - notara-internal
     restart: unless-stopped
 
   api-gateway001:
@@ -90,6 +98,8 @@ services:
         condition: service_started
       ms-notas-metas:
         condition: service_started
+    networks:
+      - notara-internal
     restart: unless-stopped
 
 
@@ -106,6 +116,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
+    networks:
+      - notara-internal
     restart: unless-stopped
 
 volumes:
@@ -114,3 +126,6 @@ volumes:
   mongo_data:
   redis_data:
 
+networks:
+  notara-internal:
+    driver: bridge
