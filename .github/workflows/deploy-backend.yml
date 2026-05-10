@@ -6,6 +6,7 @@ on:
 jobs:
   build-and-deploy:
     runs-on: self-hosted
+    timeout-minutes: 30
     steps:
       - name: Checkout código
         uses: actions/checkout@v4
@@ -21,7 +22,7 @@ jobs:
           docker build -t 495450559805.dkr.ecr.us-east-1.amazonaws.com/notara-ms-canciones:latest ./ms-canciones
           docker push 495450559805.dkr.ecr.us-east-1.amazonaws.com/notara-ms-canciones:latest
 
-      - name: Build y Push notara-bff
+      - name: Build y Push api-gateway
         run: |
           docker build -t 495450559805.dkr.ecr.us-east-1.amazonaws.com/notara-bff:latest ./api-gateway
           docker push 495450559805.dkr.ecr.us-east-1.amazonaws.com/notara-bff:latest
@@ -36,12 +37,13 @@ jobs:
               "aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 495450559805.dkr.ecr.us-east-1.amazonaws.com",
               "if [ ! -d /home/ec2-user/notara-backend ]; then git clone https://github.com/elpanxo/notara-backend.git /home/ec2-user/notara-backend; else cd /home/ec2-user/notara-backend && git pull; fi",
               "cd /home/ec2-user/notara-backend",
-              "echo JWT_SECRET=${{ secrets.JWT_SECRET }} > .env",
+              "echo DATA_EC2_IP=10.0.3.20 > .env",
+              "echo JWT_SECRET=${{ secrets.JWT_SECRET }} >> .env",
               "echo JWT_REFRESH_SECRET=${{ secrets.JWT_REFRESH_SECRET }} >> .env",
               "echo SPOTIFY_CLIENT_ID=${{ secrets.SPOTIFY_CLIENT_ID }} >> .env",
               "echo SPOTIFY_CLIENT_SECRET=${{ secrets.SPOTIFY_CLIENT_SECRET }} >> .env",
               "docker compose down || true",
-              "docker compose up -d --pull always"
+              "docker compose up -d --build"
             ]'
 
       - name: Verificar estado
