@@ -14,6 +14,9 @@ services:
       - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
       - SERVER_PORT=8081
       - EUREKA_URL=http://eureka-server:8761/eureka
+    depends_on:
+      eureka-server:
+        condition: service_healthy
     networks:
       - notara-internal
     restart: unless-stopped
@@ -39,11 +42,14 @@ services:
     ports:
       - '8083:8083'
     environment:
-      - SERVER_PORT=8083
-      - EUREKA_URL=http://eureka-server:8761/eureka
       - SPRING_DATASOURCE_URL=jdbc:postgresql://${DATA_EC2_IP}:5432/notara-notas-metas-db
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=password
+      - SERVER_PORT=8083
+      - EUREKA_URL=http://eureka-server:8761/eureka
+    depends_on:
+      eureka-server:
+        condition: service_healthy
     networks:
       - notara-internal
     restart: unless-stopped
@@ -70,6 +76,8 @@ services:
       - "8086:8086"
     environment:
       - EUREKA_URL=http://eureka-server:8761/eureka
+      - MS_USUARIOS_URL=http://ms-usuarios:8081
+      - MS_NOTAS_METAS_URL=http://ms-notas-metas:8083
     depends_on:
       - eureka-server
       - ms-usuarios
