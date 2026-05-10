@@ -87,6 +87,7 @@ services:
     restart: unless-stopped
 
   eureka-server:
+    image: 495450559805.dkr.ecr.us-east-1.amazonaws.com/notara-eureka:latest
     container_name: eureka-server
     ports:
       - "8761:8761"
