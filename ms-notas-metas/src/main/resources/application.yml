@@ -6,9 +6,9 @@ spring:
     name: ms-notas-metas
 
   datasource:
-    url: jdbc:postgresql://postgres-notas-metas:5432/notara-notas-metas-db
-    username: postgres
-    password: ${DB_PASSWORD:password}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/notara-notas-metas-db}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:password}
     driver-class-name: org.postgresql.Driver
 
   jpa:
