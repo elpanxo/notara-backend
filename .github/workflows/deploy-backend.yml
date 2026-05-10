@@ -1,85 +1,55 @@
-name: CI/CD Backend — Build → ECR → EC2
-
+name: Deploy Notara Backend
 on:
   push:
-    branches: [main]   
-
-env:
-  AWS_REGION: ${{ secrets.AWS_REGION }}
-  ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
+    branches: [main]
 
 jobs:
-  build-and-push:
-    runs-on: ubuntu-latest
+  build-and-deploy:
+    runs-on: self-hosted
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout código
+        uses: actions/checkout@v4
 
-      - name: Configurar credenciales AWS
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id:     ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-session-token:     ${{ secrets.AWS_SESSION_TOKEN }}
-          aws-region:            ${{ env.AWS_REGION }}
-
-      - name: Login a Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
-
-      - name: Build y Push ms-usuarios a ECR
+      - name: Login a ECR
         run: |
-          IMAGE=$ECR_REGISTRY/notara-ms-usuarios:latest
-          docker build -t $IMAGE ./ms-usuarios
-          docker push $IMAGE
+          aws ecr get-login-password --region us-east-1 | \
+            docker login --username AWS --password-stdin \
+            495450559805.dkr.ecr.us-east-1.amazonaws.com
 
-      - name: Build y Push ms-canciones a ECR
+      - name: Build y Push ms-canciones
         run: |
-          IMAGE=$ECR_REGISTRY/notara-ms-canciones:latest
-          docker build -t $IMAGE ./ms-canciones
-          docker push $IMAGE
+          docker build -t 495450559805.dkr.ecr.us-east-1.amazonaws.com/notara-ms-canciones:latest ./ms-canciones
+          docker push 495450559805.dkr.ecr.us-east-1.amazonaws.com/notara-ms-canciones:latest
 
-      - name: Build y Push ms-notas-metas a ECR
+      - name: Build y Push notara-bff
         run: |
-          IMAGE=$ECR_REGISTRY/notara-ms-notas-metas:latest
-          docker build -t $IMAGE ./ms-notas-metas
-          docker push $IMAGE
-      - name: Build y Push eureka-server a ECR
-        run: |
-          IMAGE=$ECR_REGISTRY/notara-eureka:latest
-          docker build -t $IMAGE ./eureka-server
-          docker push $IMAGE
+          docker build -t 495450559805.dkr.ecr.us-east-1.amazonaws.com/notara-bff:latest ./api-gateway
+          docker push 495450559805.dkr.ecr.us-east-1.amazonaws.com/notara-bff:latest
 
-      - name: Build y Push api-gateway a ECR
-        run: |
-          IMAGE=$ECR_REGISTRY/notara-api-gateway:latest
-          docker build -t $IMAGE ./api-gateway
-          docker push $IMAGE
-
-  deploy:
-    needs: build-and-push
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id:     ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-session-token:     ${{ secrets.AWS_SESSION_TOKEN }}
-          aws-region:            ${{ env.AWS_REGION }}
-
-      - name: Deploy en EC2-Backend via SSM
+      - name: Deploy en EC2 App via SSM
         run: |
           aws ssm send-command \
             --instance-ids "${{ secrets.EC2_BACKEND_INSTANCE_ID }}" \
             --document-name "AWS-RunShellScript" \
-            --parameters 'commands=[
-              "aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${{ secrets.ECR_REGISTRY }}",
-              "cd /home/ec2-user && git clone https://github.com/${{ github.repository }} repo 2>/dev/null || (cd repo && git pull)",
-              "cd /home/ec2-user/repo",
-              "echo DATA_EC2_IP=${{ secrets.DATA_EC2_PRIVATE_IP }} > .env",
-              "echo POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }} >> .env",
-              "echo JWT_SECRET=${{ secrets.JWT_SECRET }} >> .env",
+            --region us-east-1 \
+            --parameters commands='[
+              "aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 495450559805.dkr.ecr.us-east-1.amazonaws.com",
+              "if [ ! -d /home/ec2-user/notara-backend ]; then git clone https://github.com/TU_USUARIO/notara-backend.git /home/ec2-user/notara-backend; else cd /home/ec2-user/notara-backend && git pull; fi",
+              "cd /home/ec2-user/notara-backend",
+              "echo JWT_SECRET=${{ secrets.JWT_SECRET }} > .env",
               "echo JWT_REFRESH_SECRET=${{ secrets.JWT_REFRESH_SECRET }} >> .env",
-              "docker compose pull && docker compose up -d"
+              "echo SPOTIFY_CLIENT_ID=${{ secrets.SPOTIFY_CLIENT_ID }} >> .env",
+              "echo SPOTIFY_CLIENT_SECRET=${{ secrets.SPOTIFY_CLIENT_SECRET }} >> .env",
+              "docker compose down || true",
+              "docker compose up -d --pull always"
             ]'
+
+      - name: Verificar estado
+        run: |
+          sleep 20
+          aws ssm list-command-invocations \
+            --instance-id "${{ secrets.EC2_BACKEND_INSTANCE_ID }}" \
+            --details \
+            --region us-east-1 \
+            --query "CommandInvocations[0].CommandPlugins[0].{Status:Status,Output:Output}" \
+            --output table
