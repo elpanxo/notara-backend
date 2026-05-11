@@ -6,10 +6,12 @@ spring:
     name: ms-usuarios
 
   datasource:
-    url: jdbc:postgresql://postgres-usuarios:5432/notara-usuarios-db
-    username: postgres
-    password: ${DB_PASSWORD:password}
-    driver-class-name: org.postgresql.Driver
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/notara-usuarios-db}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:password}
+  data:
+    redis:
+      url: ${REDIS_URL:redis://localhost:6379}
 
   jpa:
     hibernate:
