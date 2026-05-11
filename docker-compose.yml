@@ -1,10 +1,25 @@
 version: '3.9'
+
 services:
+
+  eureka-server:
+    image: 495450559805.dkr.ecr.us-east-1.amazonaws.com/notara-eureka:latest
+    container_name: eureka-server
+    ports:
+      - "8761:8761"
+    environment:
+      - SERVER_PORT=8761
+      - JAVA_OPTS=-Xms128m -Xmx256m
+    networks:
+      - notara-internal
+    restart: unless-stopped
+    mem_limit: 256m
+
   ms-usuarios:
     image: 495450559805.dkr.ecr.us-east-1.amazonaws.com/notara-ms-usuarios:latest
     container_name: notara-ms-usuarios
     ports:
-      - '8081:8081'
+      - "8081:8081"
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://${DATA_EC2_IP}:5432/notara-usuarios-db
       - SPRING_DATASOURCE_USERNAME=postgres
@@ -14,68 +29,78 @@ services:
       - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
       - SERVER_PORT=8081
       - EUREKA_URL=http://eureka-server:8761/eureka
+      - JAVA_OPTS=-Xms128m -Xmx256m
     depends_on:
       - eureka-server
     networks:
       - notara-internal
     restart: unless-stopped
-
-  ms-canciones:
-    image: 495450559805.dkr.ecr.us-east-1.amazonaws.com/notara-ms-canciones:latest
-    container_name: notara-ms-canciones
-    ports:
-      - '3002:3002'
-    environment:
-      - MONGODB_URI=mongodb://${DATA_EC2_IP}:27017/linguaflow
-      - REDIS_URL=redis://${DATA_EC2_IP}:6379
-      - SPOTIFY_CLIENT_ID=${SPOTIFY_CLIENT_ID}
-      - SPOTIFY_CLIENT_SECRET=${SPOTIFY_CLIENT_SECRET}
-      - MS_CANCIONES_PORT=3002
-    networks:
-      - notara-internal
-    restart: unless-stopped
+    mem_limit: 300m
 
   ms-notas-metas:
     image: 495450559805.dkr.ecr.us-east-1.amazonaws.com/notara-ms-notas-metas:latest
     container_name: notara-ms-notas-metas
     ports:
-      - '8083:8083'
+      - "8083:8083"
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://${DATA_EC2_IP}:5432/notara-notas-metas-db
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=password
       - SERVER_PORT=8083
       - EUREKA_URL=http://eureka-server:8761/eureka
+      - JAVA_OPTS=-Xms128m -Xmx256m
     depends_on:
       - eureka-server
     networks:
       - notara-internal
     restart: unless-stopped
+    mem_limit: 300m
+
+  ms-canciones:
+    image: 495450559805.dkr.ecr.us-east-1.amazonaws.com/notara-ms-canciones:latest
+    container_name: notara-ms-canciones
+    ports:
+      - "3002:3002"
+    environment:
+      - MONGODB_URI=mongodb://${DATA_EC2_IP}:27017/linguaflow
+      - REDIS_URL=redis://${DATA_EC2_IP}:6379
+      - SPOTIFY_CLIENT_ID=${SPOTIFY_CLIENT_ID}
+      - SPOTIFY_CLIENT_SECRET=${SPOTIFY_CLIENT_SECRET}
+      - MS_CANCIONES_PORT=3002
+      - NODE_OPTIONS=--max-old-space-size=256
+    networks:
+      - notara-internal
+    restart: unless-stopped
+    mem_limit: 256m
 
   api-gateway:
     image: 495450559805.dkr.ecr.us-east-1.amazonaws.com/notara-api-gateway:latest
     container_name: notara-gateway
     ports:
-      - '3000:3000'
+      - "3000:3000"
     environment:
       - MS_USUARIOS_URL=http://ms-usuarios:8081
       - MS_CANCIONES_URL=http://ms-canciones:3002
       - API_GATEWAY_PORT=3000
+      - NODE_OPTIONS=--max-old-space-size=256
     depends_on:
       - ms-usuarios
       - ms-canciones
     networks:
       - notara-internal
     restart: unless-stopped
+    mem_limit: 256m
 
   api-gateway001:
     image: 495450559805.dkr.ecr.us-east-1.amazonaws.com/notara-api-gateway001:latest
+    container_name: notara-gateway001
     ports:
       - "8086:8086"
     environment:
       - EUREKA_URL=http://eureka-server:8761/eureka
       - MS_USUARIOS_URL=http://ms-usuarios:8081
       - MS_NOTAS_METAS_URL=http://ms-notas-metas:8083
+      - JAVA_OPTS=-Xms128m -Xmx256m
     depends_on:
       - eureka-server
       - ms-usuarios
@@ -83,17 +108,7 @@ services:
     networks:
       - notara-internal
     restart: unless-stopped
-
-  eureka-server:
-    image: 495450559805.dkr.ecr.us-east-1.amazonaws.com/notara-eureka:latest
-    container_name: eureka-server
-    ports:
-      - "8761:8761"
-    environment:
-      SERVER_PORT: 8761
-    networks:
-      - notara-internal
-    restart: unless-stopped
+    mem_limit: 300m
 
 networks:
   notara-internal:
