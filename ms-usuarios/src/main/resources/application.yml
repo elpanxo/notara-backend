@@ -26,16 +26,12 @@ spring:
     exclude:
       - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
 
-# ── Seguridad JWT ─────────────────────────────
 jwt:
   secret: ${JWT_SECRET:cambia_esto_por_un_string_largo_y_seguro}
   expiration-ms: ${JWT_EXPIRATION_MS:900000}
   refresh-secret: ${JWT_REFRESH_SECRET:otro_string_largo_y_seguro}
   refresh-expiration-ms: ${JWT_REFRESH_EXPIRATION_MS:604800000}
 
-
-
-# ── Actuator ─────────────────────────────────
 management:
   endpoints:
     web:
@@ -45,7 +41,6 @@ management:
     health:
       show-details: always
 
-# ── Logging ──────────────────────────────────
 logging:
   level:
     com.notara: INFO
