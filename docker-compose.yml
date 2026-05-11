@@ -15,10 +15,7 @@ services:
       - JWT_SECRET=${JWT_SECRET}
       - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
       - SERVER_PORT=8081
-      - EUREKA_URL=http://eureka-server:8761/eureka
       - JAVA_OPTS=-Xms128m -Xmx256m
-    depends_on:
-      - eureka-server
     networks:
       - notara-internal
     restart: unless-stopped
