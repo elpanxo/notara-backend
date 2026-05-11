@@ -33,15 +33,7 @@ jwt:
   refresh-secret: ${JWT_REFRESH_SECRET:otro_string_largo_y_seguro}
   refresh-expiration-ms: ${JWT_REFRESH_EXPIRATION_MS:604800000}
 
-# ── Eureka ───────────────────────────────────
-eureka:
-  client:
-    enabled: true
-    service-url:
-      defaultZone: ${EUREKA_URL:http://eureka-server:8761/eureka}
-  instance:
-    hostname: ms-usuarios
-    prefer-ip-address: true
+
 
 # ── Actuator ─────────────────────────────────
 management:
