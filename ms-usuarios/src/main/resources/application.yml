@@ -4,15 +4,11 @@ server:
 spring:
   application:
     name: ms-usuarios
-
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/notara-usuarios-db}
     username: ${SPRING_DATASOURCE_USERNAME:postgres}
     password: ${SPRING_DATASOURCE_PASSWORD:password}
-  data:
-    redis:
-      url: ${REDIS_URL:redis://localhost:6379}
-
+    driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
       ddl-auto: update
@@ -23,15 +19,9 @@ spring:
         jdbc:
           lob:
             non_contextual_creation: true
-
-  h2:
-    console:
-      enabled: true
-
   data:
     redis:
       url: ${REDIS_URL:redis://localhost:6379}
-
   autoconfigure:
     exclude:
       - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
