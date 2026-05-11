@@ -15,8 +15,8 @@ jobs:
       - name: Login a ECR
         run: |
           aws ecr get-login-password --region us-east-1 | \
-          docker login --username AWS --password-stdin \
-          495450559805.dkr.ecr.us-east-1.amazonaws.com
+            docker login --username AWS --password-stdin \
+            495450559805.dkr.ecr.us-east-1.amazonaws.com
 
       - name: Build y Push ms-usuarios
         run: |
@@ -37,6 +37,10 @@ jobs:
         run: |
           cat > $GITHUB_WORKSPACE/.env << ENVEOF
           DATA_EC2_IP=${{ secrets.DATA_EC2_IP }}
+          SPRING_DATASOURCE_URL=jdbc:postgresql://${{ secrets.DATA_EC2_IP }}:5432/notara-usuarios-db
+          SPRING_DATASOURCE_USERNAME=postgres
+          SPRING_DATASOURCE_PASSWORD=password
+          REDIS_URL=redis://${{ secrets.DATA_EC2_IP }}:6379
           JWT_SECRET=${{ secrets.JWT_SECRET }}
           JWT_REFRESH_SECRET=${{ secrets.JWT_REFRESH_SECRET }}
           SPOTIFY_CLIENT_ID=${{ secrets.SPOTIFY_CLIENT_ID }}
