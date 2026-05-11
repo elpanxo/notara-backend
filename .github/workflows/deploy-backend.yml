@@ -8,9 +8,7 @@ jobs:
   build-and-deploy:
     runs-on: self-hosted
     timeout-minutes: 60
-
     steps:
-
       - name: Checkout código
         uses: actions/checkout@v4
 
@@ -35,34 +33,23 @@ jobs:
           docker build -t 495450559805.dkr.ecr.us-east-1.amazonaws.com/notara-api-gateway:latest ./api-gateway
           docker push 495450559805.dkr.ecr.us-east-1.amazonaws.com/notara-api-gateway:latest
 
-      - name: Deploy Backend vía SSM
+      - name: Crear archivo .env
         run: |
-          aws ssm send-command \
-            --instance-ids "${{ secrets.EC2_BACKEND_INSTANCE_ID }}" \
-            --document-name "AWS-RunShellScript" \
-            --region us-east-1 \
-            --parameters commands='[
-              "aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 495450559805.dkr.ecr.us-east-1.amazonaws.com",
-              "if [ ! -d /home/ec2-user/notara-backend ]; then git clone https://github.com/elpanxo/notara-backend.git /home/ec2-user/notara-backend; else cd /home/ec2-user/notara-backend && git fetch origin && git reset --hard origin/deploy; fi",
-              "cd /home/ec2-user/notara-backend",
-              "echo DATA_EC2_IP=${{ secrets.DATA_EC2_IP }} > .env",
-              "echo JWT_SECRET=${{ secrets.JWT_SECRET }} >> .env",
-              "echo JWT_REFRESH_SECRET=${{ secrets.JWT_REFRESH_SECRET }} >> .env",
-              "echo SPOTIFY_CLIENT_ID=${{ secrets.SPOTIFY_CLIENT_ID }} >> .env",
-              "echo SPOTIFY_CLIENT_SECRET=${{ secrets.SPOTIFY_CLIENT_SECRET }} >> .env",
-              "docker compose down || true",
-              "docker system prune -af || true",
-              "docker compose pull",
-              "docker compose up -d"
-            ]'
+          cat > $GITHUB_WORKSPACE/.env << ENVEOF
+          DATA_EC2_IP=${{ secrets.DATA_EC2_IP }}
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+          JWT_REFRESH_SECRET=${{ secrets.JWT_REFRESH_SECRET }}
+          SPOTIFY_CLIENT_ID=${{ secrets.SPOTIFY_CLIENT_ID }}
+          SPOTIFY_CLIENT_SECRET=${{ secrets.SPOTIFY_CLIENT_SECRET }}
+          ENVEOF
 
-      - name: Verificar estado
+      - name: Deploy contenedores
         run: |
-          sleep 30
+          cd $GITHUB_WORKSPACE
+          docker compose down || true
+          docker system prune -af || true
+          docker compose pull
+          docker compose up -d
 
-          aws ssm list-command-invocations \
-            --instance-id "${{ secrets.EC2_BACKEND_INSTANCE_ID }}" \
-            --details \
-            --region us-east-1 \
-            --query "CommandInvocations[0].CommandPlugins[0].Output" \
-            --output text --no-cli-pager
+      - name: Verificar contenedores
+        run: docker ps
