@@ -28,19 +28,25 @@ jobs:
           docker build -t 495450559805.dkr.ecr.us-east-1.amazonaws.com/notara-ms-canciones:latest ./ms-canciones
           docker push 495450559805.dkr.ecr.us-east-1.amazonaws.com/notara-ms-canciones:latest
 
+      - name: Build y Push ms-notas-metas
+        run: |
+          docker build -t 495450559805.dkr.ecr.us-east-1.amazonaws.com/notara-ms-notas-metas:latest ./ms-notas-metas
+          docker push 495450559805.dkr.ecr.us-east-1.amazonaws.com/notara-ms-notas-metas:latest
+
       - name: Build y Push api-gateway
         run: |
           docker build -t 495450559805.dkr.ecr.us-east-1.amazonaws.com/notara-api-gateway:latest ./api-gateway
           docker push 495450559805.dkr.ecr.us-east-1.amazonaws.com/notara-api-gateway:latest
 
+      - name: Build y Push api-gateway-001
+        run: |
+          docker build -t 495450559805.dkr.ecr.us-east-1.amazonaws.com/notara-api-gateway-001:latest ./api-getaway-001
+          docker push 495450559805.dkr.ecr.us-east-1.amazonaws.com/notara-api-gateway-001:latest
+
       - name: Crear archivo .env
         run: |
           cat > $GITHUB_WORKSPACE/.env << ENVEOF
           DATA_EC2_IP=${{ secrets.DATA_EC2_IP }}
-          SPRING_DATASOURCE_URL=jdbc:postgresql://${{ secrets.DATA_EC2_IP }}:5432/notara-usuarios-db
-          SPRING_DATASOURCE_USERNAME=postgres
-          SPRING_DATASOURCE_PASSWORD=password
-          REDIS_URL=redis://${{ secrets.DATA_EC2_IP }}:6379
           JWT_SECRET=${{ secrets.JWT_SECRET }}
           JWT_REFRESH_SECRET=${{ secrets.JWT_REFRESH_SECRET }}
           SPOTIFY_CLIENT_ID=${{ secrets.SPOTIFY_CLIENT_ID }}
