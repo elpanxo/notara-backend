@@ -1,5 +1,6 @@
 server:
   port: 8086
+
 spring:
   application:
     name: api-gateway001
@@ -26,8 +27,16 @@ spring:
                 - Path=/api/notas/**
               filters:
                 - StripPrefix=1
+
 eureka:
   client:
-    enabled: true
-    service-url:
-      defaultZone: ${EUREKA_URL:http://eureka-server:8761/eureka}
+    enabled: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
