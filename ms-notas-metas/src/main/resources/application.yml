@@ -4,13 +4,11 @@ server:
 spring:
   application:
     name: ms-notas-metas
-
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/notara-notas-metas-db}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5433/notara-notas-metas-db}
     username: ${SPRING_DATASOURCE_USERNAME:postgres}
     password: ${SPRING_DATASOURCE_PASSWORD:password}
     driver-class-name: org.postgresql.Driver
-
   jpa:
     hibernate:
       ddl-auto: update
@@ -24,16 +22,13 @@ spring:
 
 eureka:
   client:
-    enabled: true
-    service-url:
-      defaultZone: ${EUREKA_URL:http://eureka-server:8761/eureka}
-
-  instance:
-    hostname: ms-notas-metas
-    prefer-ip-address: true
+    enabled: false
 
 management:
   endpoints:
     web:
       exposure:
         include: health,info
+  endpoint:
+    health:
+      show-details: always
