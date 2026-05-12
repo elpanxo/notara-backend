@@ -1,7 +1,5 @@
 version: '3.9'
-
 services:
-
   ms-usuarios:
     image: 495450559805.dkr.ecr.us-east-1.amazonaws.com/notara-ms-usuarios:latest
     container_name: notara-ms-usuarios
@@ -38,6 +36,22 @@ services:
     restart: unless-stopped
     mem_limit: 256m
 
+  ms-notas-metas:
+    image: 495450559805.dkr.ecr.us-east-1.amazonaws.com/notara-ms-notas-metas:latest
+    container_name: notara-ms-notas-metas
+    ports:
+      - "8083:8083"
+    environment:
+      - SERVER_PORT=8083
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://${DATA_EC2_IP}:5433/notara-notas-metas-db
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=password
+      - JAVA_OPTS=-Xms128m -Xmx256m
+    networks:
+      - notara-internal
+    restart: unless-stopped
+    mem_limit: 300m
+
   api-gateway:
     image: 495450559805.dkr.ecr.us-east-1.amazonaws.com/notara-api-gateway:latest
     container_name: notara-gateway
@@ -51,6 +65,22 @@ services:
     depends_on:
       - ms-usuarios
       - ms-canciones
+    networks:
+      - notara-internal
+    restart: unless-stopped
+    mem_limit: 256m
+
+  api-gateway-001:
+    image: 495450559805.dkr.ecr.us-east-1.amazonaws.com/notara-api-gateway-001:latest
+    container_name: notara-gateway-001
+    ports:
+      - "8086:8086"
+    environment:
+      - MS_USUARIOS_URL=http://ms-usuarios:8081
+      - MS_NOTAS_METAS_URL=http://ms-notas-metas:8083
+    depends_on:
+      - ms-usuarios
+      - ms-notas-metas
     networks:
       - notara-internal
     restart: unless-stopped
